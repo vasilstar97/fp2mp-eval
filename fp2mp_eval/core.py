@@ -1,8 +1,7 @@
 
 import pandas as pd
-# from concurrent.futures import ThreadPoolExecutor
 from langchain_openai import ChatOpenAI
-from tqdm.contrib.concurrent import thread_map
+from concurrent.futures import ThreadPoolExecutor
 from .models import Evaluation, Dimension
 from ._prompt import EVAL_PROMPT
 from ._config import config
@@ -31,7 +30,8 @@ class FP2MPEval():
         def invoke(*args, **kwargs):
             return self.llm.invoke(message)
 
-        results = thread_map(invoke, range(n_judges), max_workers=max_workers)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            results = list(executor.map(invoke, range(n_judges)))
 
         return results
     
